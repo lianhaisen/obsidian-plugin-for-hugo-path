@@ -1,4 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { cwd } from 'process';
+const { exec } = require('child_process');
 
 // Remember to rename these classes and interfaces!
 
@@ -18,10 +20,70 @@ export default class MyPlugin extends Plugin {
 		console.log('loading');
 
 		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
+		const ribbonIconEl = this.addRibbonIcon('pencil', 'Insert Metadata', async () => {
+			const activeFile = this.app.workspace.getActiveFile();
+			if (!activeFile) return;
+		
+			// 获取当前文件的名称（不包含扩展名）
+			const title = activeFile.basename;
+			
+			// 获取当前时间
+			const date = new Date().toISOString();
+			
+			// 需要插入的内容
+			const content = `+++
+title = '${title}'
+date = ${date}
+draft = false
+Categories = []
+Tags = []
+Description = ""
++++`;
+		
+			// 将内容插入到当前文件
+			const editor = this.app.workspace.getActiveViewOfType(MarkdownView)?.editor;
+			if (editor) {
+				const cursor = editor.getCursor();  // 获取当前光标位置
+				editor.replaceRange(content, cursor);  // 在光标位置插入内容
+			}
 		});
+
+		this.addRibbonIcon('rocket', 'Git operation', async () => {
+			const vaultPath = this.app.vault.adapter.basePath
+			console.log(vaultPath)
+			let func = async(cmd:string)=>{
+				return new Promise((resolve, reject) => {
+					exec(cmd,{cwd:vaultPath},(error:any, stdout:any, stderr:any) =>{
+						if(error) {
+							console.error(`Error: ${error.message}`);
+							reject(error);
+							return;
+						}
+						// if (stderr) {
+						// 	console.error(`Stderr: ${stderr}`);
+						// 	reject(stderr);
+						// 	return;
+						// }
+						console.log(`Stdout: ${stdout}`);
+						resolve(stdout);
+					});
+				});
+               
+			}
+
+			try {
+				
+				await func('git add .')
+				await func('git commit -m "test"')
+				await func('git push')
+				new Notice(`Success!`);
+			}catch (error) {
+				console.error(error);
+				new Notice(`Error: ${error}`);
+			}
+		});
+
+
 		// Perform additional things with the ribbon
 		ribbonIconEl.addClass('my-plugin-ribbon-class');
 
