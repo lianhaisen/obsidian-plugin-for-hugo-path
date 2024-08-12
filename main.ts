@@ -15,6 +15,7 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+		console.log('loading');
 
 		// This creates an icon in the left ribbon.
 		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
@@ -76,6 +77,19 @@ export default class MyPlugin extends Plugin {
 
 		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
 		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
+
+		this.registerMarkdownPostProcessor((element, context) => {
+			console.log('HTML Content:', element.innerHTML);  // 打印渲染后的内容
+            const images = element.querySelectorAll('.internal-embed');
+			console.log(`Found ${images.length} images`);
+            images.forEach(img => {
+                const src = img.getAttribute('src');
+                if (src && src.startsWith('/images/')) {
+                    img.setAttribute('src', `static/images/${src.substring(8)}`);
+					console.log(`Updated src: static/images/${src.substring(8)}`);
+                }
+            });
+        });
 	}
 
 	onunload() {
