@@ -73,8 +73,9 @@ Description = ""
 
 			try {
 				
+				await func('git pull')
 				await func('git add .')
-				await func('git commit -m "test"')
+				await func('git commit -m "modify"')
 				await func('git push')
 				new Notice(`Success!`);
 			}catch (error) {
